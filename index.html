@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ReviewTrust — Temporal + Network Fraud Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#0A0C10;
+    --bg-panel:#12151B;
+    --bg-panel-raised:#181C24;
+    --border:#232830;
+    --border-bright:#333B48;
+    --text-primary:#ECEDEF;
+    --text-secondary:#9BA1AC;
+    --text-dim:#5C6270;
+    --amber:#E8A33D;
+    --amber-dim:rgba(232,163,61,0.14);
+    --green:#3ECF8E;
+    --green-dim:rgba(62,207,142,0.14);
+    --red:#E5484D;
+    --red-dim:rgba(229,72,77,0.14);
+    --grid:rgba(255,255,255,0.045);
+    --font-display:'Space Grotesk', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --font-body:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg-void);
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+  .mono{font-family:var(--font-mono);}
+  .bg-grid{
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:36px 36px;
+  }
+
+  /* ---------- Top nav ---------- */
+  .nav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 32px;
+    background:rgba(10,12,16,0.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-0.01em; cursor:pointer;}
+  .brand-mark{
+    width:26px; height:26px; border-radius:6px;
+    background:linear-gradient(135deg, var(--amber), #7a5420);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:12px; font-weight:600; color:#0A0C10;
+  }
+  .nav-links{ display:flex; align-items:center; gap:28px; font-size:14px; color:var(--text-secondary);}
+  .nav-links a{ text-decoration:none; transition:color .15s;}
+  .nav-links a:hover{ color:var(--text-primary);}
+  .btn{
+    font-family:var(--font-mono); font-size:13px; font-weight:500;
+    padding:9px 16px; border-radius:6px; border:1px solid var(--border-bright);
+    background:var(--bg-panel-raised); color:var(--text-primary);
+    cursor:pointer; transition:all .15s; letter-spacing:0.01em;
+  }
+  .btn:hover{ border-color:var(--amber); }
+  .btn-primary{
+    background:var(--amber); color:#171000; border-color:var(--amber); font-weight:600;
+  }
+  .btn-primary:hover{ background:#f2b355; }
+  .btn-ghost{ background:transparent; border-color:var(--border);}
+  .btn-ghost:hover{ border-color:var(--border-bright); }
+  .badge{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.06em;
+    padding:4px 9px; border-radius:100px; border:1px solid var(--border-bright);
+    color:var(--text-secondary); display:inline-flex; align-items:center; gap:6px;
+  }
+  .dot{ width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green);}
+  .dot-live{ animation:pulseDot 1.6s infinite; }
+  @keyframes pulseDot{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative; overflow:hidden;
+    padding:88px 32px 64px;
+    display:grid; grid-template-columns:1.05fr 0.95fr; gap:40px; align-items:center;
+    max-width:1280px; margin:0 auto;
+  }
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.14em; color:var(--amber);
+    display:flex; align-items:center; gap:10px; margin-bottom:18px; text-transform:uppercase;
+  }
+  .eyebrow::before{ content:''; width:16px; height:1px; background:var(--amber); }
+  h1.headline{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(34px, 4.6vw, 58px); line-height:1.04; letter-spacing:-0.02em;
+    margin:0 0 20px;
+  }
+  h1.headline .accent{ color:var(--amber); }
+  .sub{ font-size:17px; line-height:1.6; color:var(--text-secondary); max-width:480px; margin-bottom:30px; }
+  .hero-actions{ display:flex; gap:12px; margin-bottom:36px; flex-wrap:wrap;}
+  .ticker{
+    display:flex; gap:28px; flex-wrap:wrap; padding-top:24px; border-top:1px solid var(--border);
+  }
+  .ticker-item .num{ font-family:var(--font-mono); font-size:22px; font-weight:600; color:var(--text-primary); }
+  .ticker-item .label{ font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+  .ticker-note{ font-size:10.5px; color:var(--text-dim); margin-top:14px; font-family:var(--font-mono); }
+
+  .hero-graph-wrap{
+    position:relative; aspect-ratio:1/1; max-height:460px;
+    border:1px solid var(--border); border-radius:16px;
+    background:radial-gradient(circle at 50% 45%, #141821 0%, #0C0E13 75%);
+    overflow:hidden;
+  }
+  .sweep{
+    position:absolute; inset:0;
+    background:conic-gradient(from 0deg, transparent 0deg, rgba(232,163,61,0.16) 18deg, transparent 40deg);
+    animation:spin 5s linear infinite;
+    mix-blend-mode:screen;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  .hero-graph-label{
+    position:absolute; top:14px; left:16px; font-family:var(--font-mono); font-size:10.5px; color:var(--text-dim); letter-spacing:0.08em;
+  }
+  .hero-graph-flag{
+    position:absolute; bottom:16px; left:16px; right:16px;
+    background:rgba(18,21,27,0.9); border:1px solid var(--red); border-radius:8px;
+    padding:9px 12px; font-family:var(--font-mono); font-size:11px; color:#ffb4b6;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  /* ---------- Sections ---------- */
+  section{ max-width:1280px; margin:0 auto; padding:80px 32px; }
+  .section-head{ margin-bottom:42px; max-width:640px; }
+  .section-head .eyebrow{ margin-bottom:12px; }
+  .section-head h2{ font-family:var(--font-display); font-size:clamp(26px,3vw,36px); margin:0 0 12px; letter-spacing:-0.01em;}
+  .section-head p{ color:var(--text-secondary); font-size:15.5px; line-height:1.6; margin:0;}
+
+  .problem-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .card{
+    background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:26px;
+  }
+  .card .card-icon{
+    width:34px; height:34px; border-radius:8px; background:var(--amber-dim); color:var(--amber);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-family:var(--font-mono); font-weight:600;
+  }
+  .card h3{ font-family:var(--font-display); font-size:17px; margin:0 0 8px; }
+  .card p{ color:var(--text-secondary); font-size:14px; line-height:1.6; margin:0; }
+
+  .split-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .panel{
+    background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:28px; position:relative;
+  }
+  .panel-tag{ font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em; color:var(--text-dim); text-transform:uppercase; margin-bottom:10px;}
+  .panel h3{ font-family:var(--font-display); font-size:21px; margin:0 0 14px; }
+  .panel ul{ margin:0 0 20px; padding:0; list-style:none; }
+  .panel li{ display:flex; gap:10px; font-size:13.5px; color:var(--text-secondary); padding:7px 0; border-top:1px solid var(--border); line-height:1.5;}
+  .panel li:first-child{ border-top:none; }
+  .panel li::before{ content:'—'; color:var(--text-dim); flex-shrink:0; }
+
+  .mini-burst{ display:flex; align-items:flex-end; gap:4px; height:70px; }
+  .mini-burst .bar{ flex:1; background:var(--border-bright); border-radius:2px 2px 0 0; }
+  .mini-burst .bar.spike{ background:var(--red); box-shadow:0 0 10px rgba(229,72,77,0.5); }
+
+  .mini-net{ position:relative; height:90px; }
+
+  .pipeline{
+    display:flex; align-items:stretch; gap:0; overflow-x:auto; padding-bottom:6px;
+  }
+  .pipe-step{
+    flex:1; min-width:170px; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px;
+    padding:20px 18px; position:relative; margin-right:16px;
+  }
+  .pipe-step:last-child{ margin-right:0; }
+  .pipe-step::after{
+    content:'→'; position:absolute; right:-24px; top:50%; transform:translateY(-50%);
+    color:var(--text-dim); font-size:16px;
+  }
+  .pipe-step:last-child::after{ content:''; }
+  .pipe-num{ font-family:var(--font-mono); font-size:11px; color:var(--amber); margin-bottom:10px; }
+  .pipe-step h4{ font-family:var(--font-display); font-size:15px; margin:0 0 6px; }
+  .pipe-step p{ font-size:12.5px; color:var(--text-secondary); margin:0; line-height:1.5; }
+
+  .cta-banner{
+    background:linear-gradient(120deg, var(--bg-panel), var(--bg-panel-raised));
+    border:1px solid var(--border-bright); border-radius:16px;
+    padding:48px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  }
+  .cta-banner h3{ font-family:var(--font-display); font-size:24px; margin:0 0 8px; }
+  .cta-banner p{ color:var(--text-secondary); margin:0; font-size:14px; }
+
+  footer{
+    border-top:1px solid var(--border); padding:32px; text-align:center;
+    color:var(--text-dim); font-size:12.5px; font-family:var(--font-mono);
+  }
+
+  @media (max-width:860px){
+    .hero{ grid-template-columns:1fr; }
+    .problem-grid{ grid-template-columns:1fr; }
+    .split-grid{ grid-template-columns:1fr; }
+    .nav-links{ display:none; }
+  }
+
+  /* ---------- Dashboard ---------- */
+  #dashboard{ display:none; }
+  .dash-shell{ max-width:1360px; margin:0 auto; padding:26px 28px 80px; }
+  .dash-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .dash-tabs{ display:flex; gap:6px; background:var(--bg-panel); border:1px solid var(--border); border-radius:10px; padding:4px; }
+  .dash-tab{
+    font-family:var(--font-mono); font-size:12.5px; padding:7px 14px; border-radius:7px; cursor:pointer;
+    color:var(--text-secondary); border:1px solid transparent; user-select:none;
+  }
+  .dash-tab.active{ background:var(--bg-panel-raised); color:var(--text-primary); border-color:var(--border-bright); }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px; }
+  .kpi{ background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .kpi .k-label{ font-family:var(--font-mono); font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px;}
+  .kpi .k-value{ font-family:var(--font-display); font-size:28px; font-weight:600; }
+  .kpi .k-delta{ font-family:var(--font-mono); font-size:11.5px; margin-top:6px; }
+  .k-delta.up{ color:var(--red); }
+  .k-delta.down{ color:var(--green); }
+
+  .dash-panel{ background:var(--bg-panel); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:22px; }
+  .dash-panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;}
+  .dash-panel-head h3{ font-family:var(--font-display); font-size:16px; margin:0; }
+  .dash-panel-head .hint{ font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+
+  .timeline-chart{ display:flex; align-items:flex-end; gap:5px; height:150px; }
+  .tl-bar{ flex:1; border-radius:3px 3px 0 0; background:var(--border-bright); position:relative; cursor:default; transition:opacity .15s;}
+  .tl-bar:hover{ opacity:0.75; }
+  .tl-bar.burst{ background:var(--red); box-shadow:0 0 12px rgba(229,72,77,0.45); }
+  .tl-axis{ display:flex; justify-content:space-between; margin-top:8px; font-family:var(--font-mono); font-size:10px; color:var(--text-dim);}
+
+  .two-col{ display:grid; grid-template-columns:1.3fr 1fr; gap:22px; }
+  .ring-list{ list-style:none; margin:0; padding:0; }
+  .ring-item{
+    padding:12px; border:1px solid var(--border); border-radius:9px; margin-bottom:10px; cursor:pointer; transition:border-color .15s;
+  }
+  .ring-item:hover, .ring-item.selected{ border-color:var(--amber); }
+  .ring-item .rline1{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:12px; margin-bottom:4px;}
+  .ring-item .rline2{ font-size:12.5px; color:var(--text-secondary); }
+  .risk-pill{ font-family:var(--font-mono); font-size:10.5px; padding:2px 8px; border-radius:100px; }
+  .risk-high{ background:var(--red-dim); color:#ff9295; }
+  .risk-med{ background:var(--amber-dim); color:var(--amber); }
+  .risk-low{ background:var(--green-dim); color:var(--green); }
+
+  .filter-row{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .filter-chip{
+    font-family:var(--font-mono); font-size:12px; padding:6px 12px; border-radius:100px;
+    border:1px solid var(--border-bright); color:var(--text-secondary); cursor:pointer;
+  }
+  .filter-chip.active{ background:var(--bg-panel-raised); color:var(--text-primary); border-color:var(--amber);}
+
+  .dataset-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  .dataset-chip{
+    font-family:var(--font-mono); font-size:12.5px; padding:7px 13px; border-radius:100px;
+    border:1px solid var(--border-bright); color:var(--text-secondary); cursor:pointer; transition:all .15s;
+  }
+  .dataset-chip:hover{ border-color:var(--amber); color:var(--text-primary); }
+  .dataset-chip.active{ background:var(--amber-dim); color:var(--amber); border-color:var(--amber); }
+  .dataset-upload-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .dataset-input{
+    font-family:var(--font-mono); font-size:13px; padding:9px 12px; border-radius:6px;
+    border:1px solid var(--border-bright); background:var(--bg-panel-raised); color:var(--text-primary);
+    min-width:200px; flex:1;
+  }
+  .dataset-input:focus{ outline:none; border-color:var(--amber); }
+  .dataset-file-label{ display:inline-flex; align-items:center; }
+  .dataset-status{ margin-top:12px; font-size:12px; color:var(--text-dim); line-height:1.5; word-break:break-word; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{
+    text-align:left; font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+    text-transform:uppercase; letter-spacing:0.05em; padding:10px 12px; border-bottom:1px solid var(--border); cursor:pointer;
+  }
+  tbody td{ padding:12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tbody tr{ cursor:pointer; transition:background .12s; }
+  tbody tr:hover{ background:var(--bg-panel-raised); }
+  .score-badge{
+    font-family:var(--font-mono); font-weight:600; font-size:12.5px; padding:3px 9px; border-radius:6px; display:inline-block; min-width:36px; text-align:center;
+  }
+  .reason-chip{
+    display:inline-block; font-family:var(--font-mono); font-size:10.5px; color:var(--text-secondary);
+    border:1px solid var(--border); border-radius:100px; padding:2px 8px; margin:2px 4px 2px 0;
+  }
+  .detail-row td{ background:#0E1015; border-bottom:1px solid var(--border-bright); }
+  .detail-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; padding:6px 4px; }
+  .signal-bar-label{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); margin-bottom:5px;}
+  .signal-bar-track{ height:6px; border-radius:4px; background:var(--border); overflow:hidden;}
+  .signal-bar-fill{ height:100%; border-radius:4px; }
+
+  .net-canvas-wrap{ position:relative; height:340px; }
+  .net-legend{ display:flex; gap:16px; font-family:var(--font-mono); font-size:11px; color:var(--text-secondary); margin-top:10px; flex-wrap:wrap;}
+  .legend-dot{ width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:5px; }
+
+  @media (max-width:900px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .two-col{ grid-template-columns:1fr; }
+    .detail-grid{ grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .sweep, .dot-live{ animation:none !important; }
+  }
+
+  .explain-box{ margin-top:16px; padding:16px; border:1px solid var(--border); border-radius:10px; background:#11141A; }
+  .explain-title{ font-family:var(--font-mono); font-size:11px; color:var(--amber); letter-spacing:.08em; margin-bottom:10px; }
+  .explain-list{ margin:0; padding-left:18px; color:var(--text-secondary); font-size:12.5px; line-height:1.65; }
+  .explain-list li{ margin-bottom:3px; }
+  .explain-facts{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; }
+  .explain-facts div{ border:1px solid var(--border); border-radius:7px; padding:8px 10px; }
+  .explain-facts span{ display:block; font-family:var(--font-mono); font-size:9.5px; color:var(--text-dim); margin-bottom:4px; }
+  .explain-facts strong{ font-family:var(--font-mono); font-size:13px; }
+  @media (max-width:700px){ .explain-facts{ grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="brand" onclick="showView('landing')">
+    <div class="brand-mark">RT</div>
+    ReviewTrust
+  </div>
+  <div class="nav-links">
+    <a href="#problem">Why it matters</a>
+    <a href="#how">How it works</a>
+    <a href="#pipeline">Pipeline</a>
+  </div>
+  <button class="btn btn-primary" onclick="showView('dashboard')">Launch live demo</button>
+</nav>
+
+<!-- ================= LANDING ================= -->
+<div id="landing">
+
+  <div class="hero bg-grid">
+    <div>
+      <div class="eyebrow">Temporal + Network Fraud Detection</div>
+      <h1 class="headline">Fake reviews move<br/>in <span class="accent">packs.</span><br/>We watch the pack.</h1>
+      <p class="sub">ReviewTrust fuses posting-time patterns with reviewer-network structure to surface coordinated fake-review campaigns that text analysis alone misses.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="showView('dashboard')">Launch live demo</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+      </div>
+      <div class="ticker">
+        <div class="ticker-item"><div class="num mono" id="tick1">0</div><div class="label">Reviews scanned</div></div>
+        <div class="ticker-item"><div class="num mono" id="tick2">0</div><div class="label">Rings under watch</div></div>
+        <div class="ticker-item"><div class="num mono" id="tick3">0ms</div><div class="label">Avg detection latency</div></div>
+      </div>
+      <div class="ticker-note">Illustrative figures — connect a real feed to replace with live counts.</div>
+    </div>
+
+    <div class="hero-graph-wrap">
+      <div class="hero-graph-label">REVIEWER NETWORK · LIVE SCAN</div>
+      <div class="sweep"></div>
+      <svg id="heroGraph" viewBox="0 0 400 400" width="100%" height="100%"></svg>
+      <div class="hero-graph-flag"><span class="dot" style="background:var(--red); box-shadow:0 0 6px var(--red);"></span> Ring #A417 flagged — 5 accounts, same 2 products, 11-minute window</div>
+    </div>
+  </div>
+
+  <section id="problem">
+    <div class="section-head">
+      <div class="eyebrow">The problem</div>
+      <h2>A single review is easy to fake.<br/>A pattern isn't.</h2>
+      <p>Individually, a fabricated review can look perfectly ordinary. It's only when you line up timing and connections across many reviews that the coordination becomes visible.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="card">
+        <div class="card-icon">01</div>
+        <h3>Bursts hide in plain sight</h3>
+        <p>Bulk campaigns land in a tight window — dozens of five-star reviews in an hour — then go quiet for weeks.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">02</div>
+        <h3>Rings share more than opinions</h3>
+        <p>Coordinated accounts overlap on the same small set of products, devices, or posting rhythms far more than chance allows.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">03</div>
+        <h3>Text alone isn't enough</h3>
+        <p>Language models make polished fake reviews trivial to write. Wording checks catch less and less on their own.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head">
+      <div class="eyebrow">How it works</div>
+      <h2>Two signals, fused into one score</h2>
+      <p>ReviewTrust scores every review on when it happened and who it's connected to, then combines both into a single suspicion score.</p>
+    </div>
+    <div class="split-grid">
+      <div class="panel">
+        <div class="panel-tag">Signal 01</div>
+        <h3>Temporal analytics</h3>
+        <div class="mini-burst" id="miniBurst"></div>
+        <ul style="margin-top:18px;">
+          <li>Burst detection against an expected posting rate (Hawkes / Poisson baseline)</li>
+          <li>Change-point detection on sudden rating or volume shifts</li>
+          <li>Account age vs. time-to-first-review</li>
+          <li>Purchase-to-review gap, where verified-purchase data exists</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-tag">Signal 02</div>
+        <h3>Network analytics</h3>
+        <div class="mini-net"><svg id="miniNet" viewBox="0 0 300 90" width="100%" height="100%"></svg></div>
+        <ul style="margin-top:18px;">
+          <li>Dense bipartite cores in the reviewer–product graph</li>
+          <li>Community detection to surface reviewer rings</li>
+          <li>Graph embeddings feeding an anomaly classifier</li>
+          <li>Shared device / IP clustering, where available</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <div class="section-head">
+      <div class="eyebrow">Architecture</div>
+      <h2>From raw review to action</h2>
+      <p>A five-stage pipeline turns a stream of reviews into a ranked, explainable suspicion score.</p>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-step"><div class="pipe-num">STAGE 1</div><h4>Ingest</h4><p>Reviews, timestamps, reviewer and product IDs, ratings, and text arrive as a stream.</p></div>
+      <div class="pipe-step"><div class="pipe-num">STAGE 2</div><h4>Temporal engine</h4><p>Scores each review against expected posting-rate baselines and recent change points.</p></div>
+      <div class="pipe-step"><div class="pipe-num">STAGE 3</div><h4>Network engine</h4><p>Builds the reviewer–product graph and flags unusually dense or star-shaped clusters.</p></div>
+      <div class="pipe-step"><div class="pipe-num">STAGE 4</div><h4>Fusion score</h4><p>Combines both signals into one suspicion score with an explainability trace.</p></div>
+      <div class="pipe-step"><div class="pipe-num">STAGE 5</div><h4>Action</h4><p>Routes high-confidence rings for review and feeds outcomes back into the model.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta-banner">
+      <div>
+        <h3>Watch a ring get flagged in real time</h3>
+        <p>Explore a simulated dashboard with live-feeling review streams, a burst timeline, and an interactive reviewer network.</p>
+      </div>
+      <button class="btn btn-primary" onclick="showView('dashboard')">Launch live demo →</button>
+    </div>
+  </section>
+
+  <footer>
+    REVIEWTRUST — CONCEPT PROJECT · TEMPORAL + NETWORK REVIEW FRAUD DETECTION
+  </footer>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard">
+  <nav class="nav">
+    <div class="brand" onclick="showView('landing')">
+      <div class="brand-mark">RT</div>
+      ReviewTrust
+    </div>
+    <div class="badge"><span class="dot dot-live"></span>RULE + ML SCORING</div>
+    <button class="btn btn-ghost" onclick="showView('landing')">← Back to site</button>
+  </nav>
+
+  <div class="dash-shell">
+    <div class="dash-panel" id="datasetPanel">
+      <div class="dash-panel-head">
+        <h3>Datasets</h3>
+        <div class="hint">Add one CSV per company — the engine below rescoring runs live on whichever is active</div>
+      </div>
+      <div class="dataset-chips" id="datasetChips"></div>
+      <div class="dataset-upload-row">
+        <input type="text" id="datasetNameInput" class="dataset-input" placeholder="Company / dataset name (optional)">
+        <label class="btn btn-ghost dataset-file-label">
+          Choose CSV
+          <input type="file" id="datasetFileInput" accept=".csv" style="display:none;">
+        </label>
+        <button class="btn btn-primary" id="datasetAddBtn">Add dataset</button>
+        <a class="btn btn-ghost" id="templateDownload" download="reviewtrust_template.csv">Download CSV template</a>
+      </div>
+      <div class="dataset-status mono" id="datasetStatus">Required columns: <b>reviewer</b>, <b>product</b>, and either <b>timestamp</b> (any parseable date) or <b>minutes_ago</b>. A <b>rating</b> column is optional (defaults to 5).</div>
+    </div>
+
+
+    
+      <div class="dash-panel" id="riskBreakdownPanel">
+        <div class="dash-panel-head">
+          <h3>Final Risk Calculation</h3>
+          <div class="hint">Transparent weighted risk model</div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-label">Temporal · 30%</div><div class="kpi-value" id="riskTemporal">—</div></div>
+          <div class="kpi"><div class="kpi-label">Network · 25%</div><div class="kpi-value" id="riskNetwork">—</div></div>
+          <div class="kpi"><div class="kpi-label">ML · 30%</div><div class="kpi-value" id="riskML">—</div></div>
+          <div class="kpi"><div class="kpi-label">Change Point · 15%</div><div class="kpi-value" id="riskChange">—</div></div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-tag">Formula</div>
+          <div id="riskFormula" style="font-weight:700;">Temporal × 30% + Network × 25% + ML × 30% + Change Point × 15%</div>
+          <div style="margin-top:10px;color:var(--text-secondary);">
+            Select a review to see how its final risk score was calculated.
+          </div>
+        </div>
+      </div>
+
+<div class="dash-panel" id="mlPerformancePanel">
+      <div class="dash-panel-head">
+        <h3>ML Model Performance</h3>
+        <div class="hint">Holdout evaluation from the Random Forest model</div>
+      </div>
+
+      <div class="kpi-row" style="margin-bottom:0;">
+        <div class="kpi">
+          <div class="k-label">Accuracy</div>
+          <div class="k-value" id="mlAccuracy">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k-label">Precision</div>
+          <div class="k-value" id="mlPrecision">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k-label">Recall</div>
+          <div class="k-value" id="mlRecall">—</div>
+        </div>
+        <div class="kpi">
+          <div class="k-label">F1 Score</div>
+          <div class="k-value" id="mlF1">—</div>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-top:18px;">
+        <div class="panel">
+          <div class="panel-tag">Confusion matrix</div>
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Predicted normal</th>
+                <th>Predicted suspicious</th>
+              </tr>
+            </thead>
+            <tbody id="mlConfusionMatrix">
+              <tr><td>Actual normal</td><td>—</td><td>—</td></tr>
+              <tr><td>Actual suspicious</td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-tag">Evaluation set</div>
+          <div class="explain-facts" style="grid-template-columns:repeat(2,1fr); margin-top:0;">
+            <div><span>Training samples</span><strong id="mlTrainSamples">—</strong></div>
+            <div><span>Testing samples</span><strong id="mlTestSamples">—</strong></div>
+          </div>
+          <p style="color:var(--text-secondary);font-size:12.5px;line-height:1.6;margin:16px 0 0;">
+            Accuracy shows overall correctness. Precision shows how reliable
+            suspicious predictions are. Recall shows how many suspicious cases
+            were detected. F1 balances precision and recall.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="dash-top">
+      <div class="dash-tabs">
+        <div class="dash-tab active" data-tab="overview" onclick="setDashTab('overview')">Overview</div>
+        <div class="dash-tab" data-tab="reviews" onclick="setDashTab('reviews')">Reviews</div>
+        <div class="dash-tab" data-tab="network" onclick="setDashTab('network')">Network</div>
+      </div>
+      <div class="hint mono" style="color:var(--text-dim); font-size:11.5px;" id="windowHint">Window: —</div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="k-label">Reviews scanned</div><div class="k-value" id="kpiScanned">—</div><div class="k-delta up">↑ live feed</div></div>
+      <div class="kpi"><div class="k-label">Flagged suspicious</div><div class="k-value" id="kpiFlagged">—</div><div class="k-delta up" id="kpiFlaggedPct">—</div></div>
+      <div class="kpi"><div class="k-label">Rings detected</div><div class="k-value" id="kpiRings">—</div><div class="k-delta down" id="kpiRingsNote">—</div></div>
+      <div class="kpi"><div class="k-label">Avg suspicion score</div><div class="k-value" id="kpiAvg">—</div><div class="k-delta">of 100</div></div>
+    </div>
+
+    <div class="dash-panel">
+      <div class="dash-panel-head">
+        <h3>Review volume</h3>
+        <div class="hint">Red bars mark detected bursts</div>
+      </div>
+      <div class="timeline-chart" id="timelineChart"></div>
+      <div class="tl-axis" id="timelineAxis"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="dash-panel">
+        <div class="dash-panel-head">
+          <h3>Reviewer–product network</h3>
+          <div class="hint">Click a node to inspect</div>
+        </div>
+        <div class="net-canvas-wrap"><svg id="dashNet" viewBox="0 0 560 340" width="100%" height="100%"></svg></div>
+        <div class="net-legend">
+          <span><span class="legend-dot" style="background:var(--amber);"></span>Product</span>
+          <span><span class="legend-dot" style="background:var(--text-secondary);"></span>Reviewer (normal)</span>
+          <span><span class="legend-dot" style="background:var(--red);"></span>Reviewer (ringed)</span>
+        </div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-head">
+          <h3>Detected rings</h3>
+        </div>
+        <ul class="ring-list" id="ringList"></ul>
+      </div>
+    </div>
+
+    <div class="dash-panel">
+      <div class="dash-panel-head">
+        <h3>Review stream</h3>
+        <div class="hint">Rules + ML model · click a row for the breakdown</div>
+      </div>
+      <div class="filter-row" id="filterRow">
+        <div class="filter-chip active" data-f="all">All</div>
+        <div class="filter-chip" data-f="high">High risk</div>
+        <div class="filter-chip" data-f="med">Medium risk</div>
+        <div class="filter-chip" data-f="low">Low risk</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortBy('reviewer')">Reviewer</th>
+            <th onclick="sortBy('product')">Product</th>
+            <th onclick="sortBy('rating')">Rating</th>
+            <th onclick="sortBy('time')">Posted</th>
+            <th>Signals</th>
+            <th onclick="sortBy('score')">Score</th>
+          </tr>
+        </thead>
+        <tbody id="reviewTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- backend API base ----------------
+   Empty string = same origin. Flask now serves the frontend AND the API
+   together from one process, so no separate host/port is needed. */
+const API_BASE = window.REVIEWTRUST_API_BASE || '';
+
+/* ---------------- seeded RNG (decorative graphics only) ---------------- */
+function mulberry32(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+const rand = mulberry32(1337);
+
+/* ---------------- view switching ---------------- */
+function showView(view){
+  document.getElementById('landing').style.display = view==='landing' ? 'block' : 'none';
+  document.getElementById('dashboard').style.display = view==='dashboard' ? 'block' : 'none';
+  window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+}
+showView('landing');
+
+/* ---------------- hero + mini network graphs (decorative only, no data logic) ---------------- */
+function buildAbstractGraph(svgId, nodeCount, ringSize){
+  const svg = document.getElementById(svgId);
+  const vb = svg.viewBox.baseVal;
+  const W = vb.width, H = vb.height;
+  const nodes = [];
+  for(let i=0;i<nodeCount;i++){
+    nodes.push({x: 20+rand()*(W-40), y: 20+rand()*(H-40), ring: i < ringSize});
+  }
+  const cx = W*0.62, cy = H*0.4;
+  nodes.forEach(n=>{ if(n.ring){ n.x = cx + (rand()-0.5)*W*0.16; n.y = cy + (rand()-0.5)*H*0.16; } });
+
+  let svgMarkup = '';
+  for(let i=0;i<nodes.length;i++){
+    for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i], b=nodes[j];
+      const d = Math.hypot(a.x-b.x, a.y-b.y);
+      if(a.ring && b.ring){
+        svgMarkup += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--red)" stroke-width="1.4" opacity="0.55"/>`;
+      } else if(!a.ring && !b.ring && d < W*0.22 && rand()<0.35){
+        svgMarkup += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--border-bright)" stroke-width="1" opacity="0.5"/>`;
+      }
+    }
+  }
+  nodes.forEach(n=>{
+    const r = n.ring ? 5 : 3.4;
+    const fill = n.ring ? 'var(--red)' : 'var(--text-dim)';
+    const glow = n.ring ? `<circle cx="${n.x}" cy="${n.y}" r="${r+5}" fill="var(--red)" opacity="0.18"/>` : '';
+    svgMarkup += `${glow}<circle cx="${n.x}" cy="${n.y}" r="${r}" fill="${fill}"/>`;
+  });
+  svg.innerHTML = svgMarkup;
+}
+buildAbstractGraph('heroGraph', 26, 5);
+buildAbstractGraph('miniNet', 16, 4);
+
+(function(){
+  const el = document.getElementById('miniBurst');
+  const vals = [12,14,10,16,13,55,60,18,15,12,14,11];
+  vals.forEach((v)=>{
+    const bar = document.createElement('div');
+    bar.className = 'bar' + (v>40?' spike':'');
+    bar.style.height = (v/65*100)+'%';
+    el.appendChild(bar);
+  });
+})();
+
+function countUp(id, target, suffix){
+  const el = document.getElementById(id);
+  let cur = 0; const steps = 40;
+  const inc = target/steps;
+  const iv = setInterval(()=>{
+    cur += inc;
+    if(cur>=target){ cur=target; clearInterval(iv); }
+    el.textContent = Math.round(cur).toLocaleString() + (suffix||'');
+  }, 25);
+}
+countUp('tick1', 12482);
+countUp('tick2', 37);
+countUp('tick3', 212, 'ms');
+
+/* ================= dataset store =================
+   Every entry is the ALREADY-SCORED model returned by the backend:
+   { reviews:[...], ring_groups:[...], products:[...], truncated, mapping } */
+let datasets = {};
+let activeDataset = null;
+let currentModel = null;
+
+function renderDatasetChips(){
+  const wrap = document.getElementById('datasetChips');
+  wrap.innerHTML = '';
+  Object.keys(datasets).forEach(name=>{
+    const chip = document.createElement('div');
+    chip.className = 'dataset-chip' + (name===activeDataset ? ' active' : '');
+    chip.textContent = `${name} · ${datasets[name].reviews.length.toLocaleString()} reviews`;
+    chip.onclick = ()=>{ activeDataset = name; renderDatasetChips(); renderAll(); };
+    wrap.appendChild(chip);
+  });
+}
+
+function addDataset(name, model){
+  datasets[name] = model;
+  activeDataset = name;
+  renderDatasetChips();
+  renderAll();
+}
+
+document.getElementById('datasetAddBtn').addEventListener('click', async ()=>{
+  const nameInput = document.getElementById('datasetNameInput');
+  const fileInput = document.getElementById('datasetFileInput');
+  const status = document.getElementById('datasetStatus');
+  const file = fileInput.files[0];
+  if(!file){ status.innerHTML = '✕ Choose a CSV file first.'; status.style.color = 'var(--red)'; return; }
+  let name = nameInput.value.trim() || file.name.replace(/\.csv$/i,'');
+  if(datasets[name]) name = name + ' (' + (Object.keys(datasets).length+1) + ')';
+
+  status.innerHTML = 'Uploading and scoring…';
+  status.style.color = 'var(--text-secondary)';
+
+  try{
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch(`${API_BASE}/api/upload`, { method:'POST', body: fd });
+    const data = await res.json();
+    if(!res.ok){
+      status.innerHTML = '✕ ' + (data.detail || 'Upload failed.');
+      status.style.color = 'var(--red)';
+      return;
+    }
+    addDataset(name, data);
+    let msg = `✓ Loaded ${data.reviews.length.toLocaleString()} reviews for "${name}" · mapped reviewer→${data.mapping.reviewer}, product→${data.mapping.product}, rating→${data.mapping.rating}, time→${data.mapping.time}`;
+    if(data.truncated) msg += ' · truncated for performance';
+    status.innerHTML = msg;
+    status.style.color = 'var(--green)';
+    nameInput.value = ''; fileInput.value = '';
+  }catch(err){
+    status.innerHTML = `✕ Could not reach the backend API at ${API_BASE}. Is the FastAPI server running?`;
+    status.style.color = 'var(--red)';
+  }
+});
+
+const CSV_TEMPLATE = `reviewer,product,rating,timestamp
+alex_42,Wireless Earbuds Pro,5,2026-07-11T14:32:00
+jamie_88,Wireless Earbuds Pro,5,2026-07-11T14:34:00
+sam_19,Wireless Earbuds Pro,5,2026-07-11T14:37:00
+priya_61,Standing Desk Converter,4,2026-07-10T09:12:00
+noah_23,Insulated Water Bottle,5,2026-07-09T18:45:00`;
+document.getElementById('templateDownload').href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(CSV_TEMPLATE);
+
+/* ================= render functions (all take the active scored model) ================= */
+function fmtTime(mins){
+  if(mins<60) return Math.round(mins)+'m ago';
+  const h = Math.floor(mins/60);
+  if(h<24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+function riskOf(score){ return score>=75 ? 'high' : score>=45 ? 'med' : 'low'; }
+function riskColor(score){ return score>=75 ? 'var(--red)' : score>=45 ? 'var(--amber)' : 'var(--green)'; }
+function riskBg(score){ return score>=75 ? 'var(--red-dim)' : score>=45 ? 'var(--amber-dim)' : 'var(--green-dim)'; }
+
+function renderKPIs(model){
+  const REVIEWS = model.reviews;
+  const flagged = REVIEWS.filter(r=>r.score>=75).length;
+  const avgScore = REVIEWS.length ? Math.round(REVIEWS.reduce((s,r)=>s+r.score,0)/REVIEWS.length) : 0;
+  document.getElementById('kpiScanned').textContent = REVIEWS.length.toLocaleString();
+  document.getElementById('kpiFlagged').textContent = flagged;
+  document.getElementById('kpiFlaggedPct').textContent = REVIEWS.length ? '↑ '+Math.round(flagged/REVIEWS.length*100)+'% of stream' : '—';
+  document.getElementById('kpiRings').textContent = model.ring_groups.length;
+  const highConf = model.ring_groups.filter(g=>g.avg_score>=75).length;
+  document.getElementById('kpiRingsNote').textContent = highConf+' high-confidence';
+  document.getElementById('kpiAvg').textContent = avgScore;
+}
+
+function renderTimeline(model){
+  const el = document.getElementById('timelineChart');
+  const axis = document.getElementById('timelineAxis');
+  const windowHint = document.getElementById('windowHint');
+  el.innerHTML = '';
+  const REVIEWS = model.reviews;
+  if(REVIEWS.length===0){ axis.innerHTML = ''; windowHint.textContent = `Active dataset: ${activeDataset} · no reviews`; return; }
+  const span = Math.max(Math.max(...REVIEWS.map(r=>r.minsAgo)), 60);
+  const bucketCount = 24;
+  const bucketSize = span / bucketCount;
+  const buckets = new Array(bucketCount).fill(0);
+  REVIEWS.forEach(r=>{
+    let idx = bucketCount - 1 - Math.floor(r.minsAgo / bucketSize);
+    idx = Math.max(0, Math.min(bucketCount-1, idx));
+    buckets[idx]++;
+  });
+  const max = Math.max(...buckets, 1);
+  const mean = buckets.reduce((a,b)=>a+b,0)/bucketCount;
+  buckets.forEach(v=>{
+    const bar = document.createElement('div');
+    const isBurst = v >= 3 && v > mean*2.2;
+    bar.className = 'tl-bar' + (isBurst?' burst':'');
+    bar.style.height = (v/max*100)+'%';
+    bar.title = `${v} review${v!==1?'s':''}`;
+    el.appendChild(bar);
+  });
+  const spanLabel = span >= 1440 ? Math.round(span/1440)+'d' : Math.round(span/60)+'h';
+  axis.innerHTML = `<span>${spanLabel} ago</span><span>midpoint</span><span>now</span>`;
+  windowHint.textContent = `Active dataset: ${activeDataset} · window: ${spanLabel} · ${REVIEWS.length.toLocaleString()} reviews`;
+}
+
+function renderRingList(model){
+  const list = document.getElementById('ringList');
+  list.innerHTML = '';
+  const { ring_groups } = model;
+  if(ring_groups.length===0){
+    list.innerHTML = '<li class="ring-item" style="cursor:default;">No dense clusters detected in this dataset.</li>';
+    return;
+  }
+  ring_groups.forEach(g=>{
+    const risk = g.avg_score>=75 ? 'high' : 'med';
+    const note = `${g.reviewers.length} accounts · ${g.product_count} shared product${g.product_count>1?'s':''} · avg score ${g.avg_score} · max overlap ${g.max_overlap}`;
+    const li = document.createElement('li');
+    li.className = 'ring-item';
+    li.innerHTML = `<div class="rline1"><span>${g.label}</span><span class="risk-pill risk-${risk}">${risk==='high'?'High risk':'Medium risk'}</span></div>
+      <div class="rline2">${note}</div>`;
+    li.onclick = ()=>{
+      document.querySelectorAll('.ring-item').forEach(x=>x.classList.remove('selected'));
+      li.classList.add('selected');
+      activeFilter = 'ring:' + g.ring_id;
+      renderTable();
+    };
+    list.appendChild(li);
+  });
+}
+
+function renderNetworkGraph(model){
+  const svg = document.getElementById('dashNet');
+  const W = 560, H = 340;
+  const { reviews, products } = model;
+  const productPos = {};
+  products.forEach((p,i)=>{
+    productPos[p] = { x: 90, y: products.length>1 ? 30 + i*(H-60)/(products.length-1) : H/2 };
+  });
+  const reviewerSet = new Set(); reviews.forEach(r=>reviewerSet.add(r.reviewer));
+  const reviewers = Array.from(reviewerSet);
+  const reviewerPos = {};
+  reviewers.forEach((h,i)=>{
+    reviewerPos[h] = { x: 420 + (rand()-0.5)*100, y: reviewers.length>1 ? 20 + i*((H-40)/reviewers.length) : H/2 };
+  });
+  const ringedSet = new Set(); reviews.forEach(r=>{ if(r.ring!==null) ringedSet.add(r.reviewer); });
+
+  let markup = '';
+  reviews.forEach(r=>{
+    const a = productPos[r.product], b = reviewerPos[r.reviewer];
+    if(!a || !b) return;
+    const isRing = r.ring !== null;
+    markup += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${isRing ? 'var(--red)' : 'var(--border-bright)'}" stroke-width="${isRing?1.3:0.8}" opacity="${isRing?0.6:0.35}"/>`;
+  });
+  products.forEach(p=>{
+    const pos = productPos[p];
+    markup += `<rect x="${pos.x-5}" y="${pos.y-5}" width="10" height="10" rx="2" fill="var(--amber)"/>`;
+    markup += `<text x="${pos.x-14}" y="${pos.y+3}" text-anchor="end" font-family="IBM Plex Mono" font-size="8" fill="var(--text-dim)">${p.split(' ').slice(0,2).join(' ')}</text>`;
+  });
+  reviewers.forEach(h=>{
+    const pos = reviewerPos[h];
+    const ringed = ringedSet.has(h);
+    const fill = ringed ? 'var(--red)' : 'var(--text-dim)';
+    const r = ringed ? 4.5 : 3;
+    markup += `<circle cx="${pos.x}" cy="${pos.y}" r="${r}" fill="${fill}"><title>${h}</title></circle>`;
+  });
+  svg.innerHTML = markup;
+}
+
+/* ---------------- review table ---------------- */
+let sortKey = 'score', sortDir = -1;
+let activeFilter = 'all';
+let expandedId = null;
+
+document.getElementById('filterRow').addEventListener('click', (e)=>{
+  const chip = e.target.closest('.filter-chip');
+  if(!chip) return;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  activeFilter = chip.dataset.f;
+  document.querySelectorAll('.ring-item').forEach(x=>x.classList.remove('selected'));
+  renderTable();
+});
+
+function sortBy(key){
+  if(sortKey===key){ sortDir *= -1; } else { sortKey = key; sortDir = -1; }
+  renderTable();
+}
+
+function renderTable(){
+  if(!currentModel) return;
+  let rows = [...currentModel.reviews];
+  if(activeFilter==='high') rows = rows.filter(r=>riskOf(r.score)==='high');
+  else if(activeFilter==='med') rows = rows.filter(r=>riskOf(r.score)==='med');
+  else if(activeFilter==='low') rows = rows.filter(r=>riskOf(r.score)==='low');
+  else if(activeFilter.startsWith('ring:')) rows = rows.filter(r=>r.ring===activeFilter.slice(5));
+
+  rows.sort((a,b)=>{
+    let av, bv;
+    if(sortKey==='reviewer'){ av=a.reviewer; bv=b.reviewer; }
+    else if(sortKey==='product'){ av=a.product; bv=b.product; }
+    else if(sortKey==='rating'){ av=a.rating; bv=b.rating; }
+    else if(sortKey==='time'){ av=a.minsAgo; bv=b.minsAgo; }
+    else { av=a.score; bv=b.score; }
+    if(av<bv) return -1*sortDir;
+    if(av>bv) return 1*sortDir;
+    return 0;
+  });
+
+  const body = document.getElementById('reviewTableBody');
+  body.innerHTML = '';
+  if(rows.length===0){
+    body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim); text-align:center; padding:24px;">No reviews match this filter.</td></tr>';
+    return;
+  }
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    const reasons = r.reasons.length ? r.reasons.map(x=>`<span class="reason-chip">${x}</span>`).join('') : '<span class="reason-chip">Clean</span>';
+    tr.innerHTML = `
+      <td class="mono">${r.reviewer}</td>
+      <td>${r.product}</td>
+      <td class="mono">${'★'.repeat(r.rating)}</td>
+      <td class="mono" style="color:var(--text-dim)">${fmtTime(r.minsAgo)}</td>
+      <td>${reasons}</td>
+      <td><span class="score-badge" style="color:${riskColor(r.score)}; background:${riskBg(r.score)};">${r.score}</span></td>
+    `;
+    tr.onclick = ()=>{
+      expandedId = expandedId===r.id ? null : r.id;
+      renderTable();
+    };
+    body.appendChild(tr);
+
+    if(expandedId===r.id){
+      const temporal = r.temporal;
+      const network = r.network;
+      const mlScore = r.mlScore ?? 0;
+      const dtr = document.createElement('tr');
+      dtr.className = 'detail-row';
+      dtr.innerHTML = `<td colspan="6">
+        <div class="detail-grid">
+          <div>
+            <div class="signal-bar-label"><span>Temporal signal</span><span>${temporal}/100</span></div>
+            <div class="signal-bar-track"><div class="signal-bar-fill" style="width:${temporal}%; background:var(--amber);"></div></div>
+          </div>
+          <div>
+            <div class="signal-bar-label"><span>Network signal</span><span>${network}/100</span></div>
+            <div class="signal-bar-track"><div class="signal-bar-fill" style="width:${network}%; background:var(--red);"></div></div>
+          </div>
+          <div>
+            <div class="signal-bar-label"><span>ML risk</span><span>${mlScore}/100</span></div>
+            <div class="signal-bar-track"><div class="signal-bar-fill" style="width:${mlScore}%; background:#8b7cff;"></div></div>
+          </div>
+          <div>
+            <div class="signal-bar-label"><span>Final score</span><span>${r.score}/100</span></div>
+            <div class="signal-bar-track"><div class="signal-bar-fill" style="width:${r.score}%; background:${riskColor(r.score)};"></div></div>
+          </div>
+        </div>
+        <div class="explain-box">
+          <div class="explain-title">WHY THIS REVIEW WAS FLAGGED</div>
+          <ul class="explain-list">
+            ${(r.explanation || ['No strong individual signal was found']).map(text => `<li>${text}</li>`).join('')}
+          </ul>
+          <div class="explain-facts">
+            <div><span>Reviewer reviews</span><strong>${r.signals?.reviewerReviews ?? '—'}</strong></div>
+            <div><span>Product reviews</span><strong>${r.signals?.productReviews ?? '—'}</strong></div>
+            <div><span>Burst reviews</span><strong>${r.signals?.burstReviews ?? '—'}</strong></div>
+            <div><span>Cluster size</span><strong>${r.signals?.clusterSize ?? '—'}</strong></div>
+            <div><span>Shared accounts</span><strong>${r.signals?.sharedAccounts ?? '—'}</strong></div>
+            <div><span>ML probability</span><strong>${(Number(r.mlProbability || 0) * 100).toFixed(1)}%</strong></div>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:11.5px; color:var(--text-dim);">
+          Final score = 70% rule-based score + 30% ML score.
+        </div>
+      </td>`;
+      body.appendChild(dtr);
+    }
+  });
+}
+
+
+function renderMLPerformance(model){
+  const evaluation = model?.ml?.evaluation;
+  if(!evaluation) return;
+
+  const percent = value =>
+    Number.isFinite(Number(value)) ? (Number(value) * 100).toFixed(1) + '%' : '—';
+
+  document.getElementById('mlAccuracy').textContent = percent(evaluation.accuracy);
+  document.getElementById('mlPrecision').textContent = percent(evaluation.precision);
+  document.getElementById('mlRecall').textContent = percent(evaluation.recall);
+  document.getElementById('mlF1').textContent = percent(evaluation.f1);
+
+  document.getElementById('mlTrainSamples').textContent =
+    Number(evaluation.train_samples || 0).toLocaleString();
+  document.getElementById('mlTestSamples').textContent =
+    Number(evaluation.test_samples || 0).toLocaleString();
+
+  const matrix = evaluation.confusion_matrix || [[0,0],[0,0]];
+  document.getElementById('mlConfusionMatrix').innerHTML = `
+    <tr>
+      <td>Actual normal</td>
+      <td>${Number(matrix[0]?.[0] || 0).toLocaleString()}</td>
+      <td>${Number(matrix[0]?.[1] || 0).toLocaleString()}</td>
+    </tr>
+    <tr>
+      <td>Actual suspicious</td>
+      <td>${Number(matrix[1]?.[0] || 0).toLocaleString()}</td>
+      <td>${Number(matrix[1]?.[1] || 0).toLocaleString()}</td>
+    </tr>`;
+}
+
+
+function renderRiskBreakdown(review){
+  const breakdown = review && review.riskBreakdown;
+  if(!breakdown) return;
+
+  const value = key => {
+    const item = breakdown[key];
+    return item ? `${item.score}/100 → ${item.contribution} pts` : '—';
+  };
+
+  document.getElementById('riskTemporal').textContent = value('temporal');
+  document.getElementById('riskNetwork').textContent = value('network');
+  document.getElementById('riskML').textContent = value('ml');
+  document.getElementById('riskChange').textContent = value('changePoint');
+  document.getElementById('riskFormula').textContent =
+    breakdown.formula ||
+    'Temporal × 30% + Network × 25% + ML × 30% + Change Point × 15%';
+}
+
+function renderAll(){
+  if(!activeDataset || !datasets[activeDataset]) return;
+  currentModel = datasets[activeDataset];
+  activeFilter = 'all'; expandedId = null;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.f==='all'));
+  document.querySelectorAll('.ring-item').forEach(x=>x.classList.remove('selected'));
+  renderKPIs(currentModel);
+  renderMLPerformance(currentModel);
+  renderRiskBreakdown(currentModel.reviews?.[0]);
+  renderTimeline(currentModel);
+  renderRingList(currentModel);
+  renderNetworkGraph(currentModel);
+  renderTable();
+}
+
+/* dashboard tabs (visual scroll-to only, keeps single-page simplicity) */
+function setDashTab(tab){
+  document.querySelectorAll('.dash-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  if(tab==='overview'){ document.querySelector('.dash-shell').scrollIntoView({behavior:'smooth'}); }
+  if(tab==='network'){ document.querySelector('.two-col').scrollIntoView({behavior:'smooth', block:'center'}); }
+  if(tab==='reviews'){ document.querySelectorAll('.dash-panel')[3]?.scrollIntoView({behavior:'smooth', block:'center'}); }
+}
+
+/* bootstrap: pull the synthetic sample dataset from the backend so the
+   dashboard isn't empty before you upload your own CSV */
+(async function bootstrap(){
+  const status = document.getElementById('datasetStatus');
+  try{
+    const res = await fetch(`${API_BASE}/api/sample`);
+    if(!res.ok) throw new Error('bad response');
+    const data = await res.json();
+    addDataset('Sample (synthetic)', data);
+  }catch(err){
+    status.innerHTML = `✕ Could not reach the Flask backend at ${API_BASE}. Start app.py and refresh this page. and refresh this page.`;
+    status.style.color = 'var(--red)';
+  }
+})();
+</script>
+</body>
+</html>
